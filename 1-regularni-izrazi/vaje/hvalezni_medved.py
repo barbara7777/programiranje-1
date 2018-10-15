@@ -26,11 +26,13 @@ medved. Zvrhano zibelko sladkih hrušk mi je prinesel za en sam izdrt trn"."""
 # >>> find_words(test_text, 'de')
 # {'izdere', 'debel', 'oddide', 'začudeno'}
 ###############################################################################
+
+
 def find_words(besedilo, podniz):
     print('iscem besede')
     pattern = r"\b\w*" + podniz + r"\w*\b"
-    m = re.findall(pattern, besedilo)
-    mn = set(m)
+    ujemanje = re.findall(pattern, besedilo)
+    mn = set(ujemanje)
     return mn
 
 ###############################################################################
@@ -40,11 +42,12 @@ def find_words(besedilo, podniz):
 # >>> find_prefix(test_text, 'zi')
 # {'zibala', 'zibel', 'zibelko'}
 ###############################################################################
+
+
 def find_prefix(besedilo, predpona):
     vzorec = r'\b' + predpona + r'\w*'
-    m = re.findall(vzorec, besedilo)
-    mn = set(m)
-    return mn
+    ujemanje = re.findall(vzorec, besedilo)
+    return set(ujemanje)
 
 ###############################################################################
 # 3) Sestavite funkcijo [find_suffix], ki vrne množico vseh besed, ki se
@@ -53,11 +56,12 @@ def find_prefix(besedilo, predpona):
 # >>> find_suffix(test_text, 'la')
 # {'zibala', 'razveselila', 'prestrašila', 'šivala', 'opazila', 'tla'}
 ###############################################################################
+
+
 def find_suffix(besedilo, pripona):
     vzorec = r'\b\w*' + pripona
-    m = re.findall(vzorec, besedilo)
-    mn = set(m)
-    return mn
+    ujemanje = re.findall(vzorec, besedilo)
+    return set(ujemanje)
 
 ###############################################################################
 # 4) Sestavite funkcijo [double_letters], ki sprejme niz in vrne množico vseh
@@ -66,9 +70,11 @@ def find_suffix(besedilo, pripona):
 # >>> double_letters('A volunteer is worth twenty pressed men.')
 # {'volunteer', 'pressed'}
 ###############################################################################
+
+
 def double_letters(besedilo):
     vzorec = r'\b\w*(\w)\1\w*'
+    mn = set()
     for ujemanje in re.finditer(vzorec, besedilo):
-        beseda = m.group(0)
-        mn = set().add(beseda)
+        mn.add(ujemanje.group(0))
     return mn
