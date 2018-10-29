@@ -21,6 +21,8 @@ def download_url_to_string(url):
     '''This function takes a URL as argument and tries to download it
     using requests. Upon success, it returns the page contents as string.'''
     try:
+        print('Shranjujem')
+        sys.stdout.flush()
         # del kode, ki morda sproži napako
         r = requests.get(url)
     except requests.exceptions.ConnectionError:
@@ -36,12 +38,12 @@ def download_url_to_string(url):
         print("failed to download url " + url)
         return
 
-def save_string_to_file(text, directory, filename):
+def save_string_to_file(text, cat_directory, frontpage_filename):
     '''Write "text" to the file "filename" located in directory "directory",
     creating "directory" if necessary. If "directory" is the empty string, use
     the current directory.'''
     os.makedirs(directory, exist_ok=True)
-    path = os.path.join(directory, filename)
+    path = os.path.join(cat_directory, frontpage_filename)
     with open(path, 'w', encoding='utf-8') as file_out:
         file_out.write(text)
     return None
@@ -92,7 +94,20 @@ def page_to_ads(vsebina_strani):
 def get_dict_from_ad_block(TODO):
     '''Build a dictionary containing the name, description and price
     of an ad block.'''
-    return TODO
+    slovar = {}
+    vzorec = r'<table><tr><td><a title="(?P<ime>\.+)"'
+        '\.+?'
+        r'<div class="coloumn content">' '\n' r'<h3><a\.*?</a></h3>' '\s*' '(?P<opis>\w*?)'
+        r'<div class="additionalInfo">'
+        '[\s\.]+?'
+        r'<div class="price">(?P<cena>\w*?)</div>'
+
+    for ujemanje in re.finditer(vzorec, vsebina):
+        slovar['ime'] = ujemanje.group('ime')
+        slovar['cena'] = ujemanje.group('cena')
+        slovar['opis'] = ujemanje.group('opis')
+
+    return slovar
 
 # Definirajte funkcijo, ki sprejme ime in lokacijo datoteke, ki vsebuje
 # besedilo spletne strani, in vrne seznam slovarjev, ki vsebujejo podatke o
