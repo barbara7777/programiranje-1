@@ -79,7 +79,6 @@ def read_file_to_string(directory, filename):
 def page_to_ads(vsebina_strani):
     '''Split "page" to a list of advertisement blocks.'''
     vzorec = re.compile(r'<div class="ad">(.*?)<div class="clear">', re.DOTALL)
-    
 
     seznam = []
     for ujemanje in re.finditer(vzorec, vsebina_strani):
@@ -91,32 +90,31 @@ def page_to_ads(vsebina_strani):
 # podatke o imenu, ceni in opisu v oglasu.
 
 
-def get_dict_from_ad_block(TODO):
+def get_dict_from_ad_block(block):
     '''Build a dictionary containing the name, description and price
     of an ad block.'''
-    slovar = {}
-    vzorec = r'<table><tr><td><a title="(?P<ime>\.+)"'
-        '\.+?'
-        r'<div class="coloumn content">' '\n' r'<h3><a\.*?</a></h3>' '\s*' '(?P<opis>\w*?)'
-        r'<div class="additionalInfo">'
-        '[\s\.]+?'
-        r'<div class="price">(?P<cena>\w*?)</div>'
-
-    for ujemanje in re.finditer(vzorec, vsebina):
-        slovar['ime'] = ujemanje.group('ime')
-        slovar['cena'] = ujemanje.group('cena')
-        slovar['opis'] = ujemanje.group('opis')
-
-    return slovar
+    rx = re.compile(r'title="(?P<name>.*?)"'
+                    r'.*?</h3>\s*(?P<description>.*?)\s*</?div'
+                    r'.*?class="price">(?P<price>.*?)</div',
+                    re.DOTALL)
+    data = re.search(rx, block)
+    ad_dict = data.groupdict()
+    return ad_dict
 
 # Definirajte funkcijo, ki sprejme ime in lokacijo datoteke, ki vsebuje
 # besedilo spletne strani, in vrne seznam slovarjev, ki vsebujejo podatke o
 # vseh oglasih strani.
 
 
-def ads_from_file(TODO):
+def ads_from_file(filename, directory):
     '''Parse the ads in filename/directory into a dictionary list.'''
-    return TODO
+    page = read_file_to_string(filename, directory)
+    blocks = page_to_ads(page)
+    ads = [get_dict_from_ad_block(block) for block in blocks]
+    return ads
+
+def ads_frontpage():
+    return ads_from_file(cat_directory, frontpage_filename)
 
 ###############################################################################
 # Obdelane podatke želimo sedaj shraniti.
@@ -140,6 +138,11 @@ def write_csv(fieldnames, rows, directory, filename):
 # podatke iz oglasa mačke, in zapiše vse podatke v csv datoteko. Imena za
 # stolpce [fieldnames] pridobite iz slovarjev.
 
+def write_cat_ads_to_csv(ads, directory, filename):
+    '''Write a CSV file containing one ad from "ads" on each row.'''
+    write_csv(ads[0].keys(), ads, directory, filename)
 
-def write_cat_ads_to_csv(TODO):
-    return TODO
+
+def write_cat_csv(ads):
+    '''Save "ads" to "cat_directory"/"csv_filename"'''
+    write_cat_ads_to_csv(ads, cat_directory, csv_filename)
