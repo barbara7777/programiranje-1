@@ -10,7 +10,26 @@
  - : int = 3
 [*----------------------------------------------------------------------------*)
 
-let rec penultimate_element = ()
+let rec ultimate_element list =    (* finkcija samo za čisto zadnji element *)
+   match list with
+   | [] -> failwith "List too short"
+   | y :: [] -> y
+   | y :: ys -> ultimate_element (ys)
+
+
+let rec penultimate_element list = 
+  match list with 
+   | [] -> failwith "List too short"
+   | x :: [] -> failwith "List too short"
+   | x :: y :: [] -> x
+   | x :: y :: ys -> penultimate_element (y :: ys)
+
+
+let rec penultimate_element = function   (*polepšana funkcija *)
+  | _ :: [] | [] -> failwith "List too short"
+  | x :: _ :: [] -> x
+  | _ :: y :: ys -> penultimate_element (y :: ys)
+
 
 (*----------------------------------------------------------------------------*]
  The function [get k list] returns the [k]-th element in the list [list].
@@ -22,8 +41,19 @@ let rec penultimate_element = ()
  - : int = 1
 [*----------------------------------------------------------------------------*)
 
-let rec get = ()
+let rec get k list =
+  match k, list with    	(*če naštevam vmes z vejicami, je to kot par *)
+  | _, [] -> failwith "List too short"
+  | k, x :: xs when k <= 0 -> x
+  | k, x :: xs -> get (k - 1) xs
 
+
+  (*ker v resnici matchamo samo seznam, k je neuporabljen *)
+let rec get k = function
+  | [] -> failwith "List too short"
+  | x : xs when k <= 0 -> x
+  | x :: xs -> get (k-1) xs
+  
 (*----------------------------------------------------------------------------*]
  The function [double list] doubles the occurences of elements in the list.
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -45,7 +75,14 @@ let rec double = ()
  - : int list * int list = ([1; 2; 3; 4; 5], [])
 [*----------------------------------------------------------------------------*)
 
-let rec divide = ()
+let rec divide k list =
+  match list with
+  | k, list when (k <= 0) -> ([], list)
+  | k, [] -> ([], [])
+  | k, k :: xs -> 
+    let (left_list, right_list) = divide (k-1) xs in
+    (x :: left_list, right_list)
+
 
 (*----------------------------------------------------------------------------*]
  The function [delete k list] removes the [k]-th element of the list.
