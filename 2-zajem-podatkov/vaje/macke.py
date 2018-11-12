@@ -25,7 +25,7 @@ def download_url_to_string(url):
         print('Shranjujem')
         sys.stdout.flush()
         # del kode, ki morda sproži napako
-        r = requests.get(cats_frontpage_url)
+        r = requests.get(url)
     except requests.exceptions.ConnectionError:
         # koda, ki se izvede pri napaki
         # dovolj je če izpišemo opozorilo in prekinemo izvajanje funkcije
@@ -34,6 +34,10 @@ def download_url_to_string(url):
     # nadaljujemo s kodo če ni prišlo do napake
     return r.text
 
+        return r.text
+    else:
+        print("failed to download url " + url)
+        return
 
 def save_string_to_file(text, directory, filename):
     '''Write "text" to the file "filename" located in directory "directory",
@@ -136,12 +140,11 @@ def write_csv(fieldnames, rows, directory, filename):
 # podatke iz oglasa mačke, in zapiše vse podatke v csv datoteko. Imena za
 # stolpce [fieldnames] pridobite iz slovarjev.
 
+def write_cat_ads_to_csv(ads, directory, filename):
+    '''Write a CSV file containing one ad from "ads" on each row.'''
+    write_csv(ads[0].keys(), ads, directory, filename)
 
-def write_cat_ads_to_csv(slovarji, imena_polj, ime_datoteke):
-    '''Iz seznama slovarjev ustvari CSV datoteko z glavo.'''
-    pripravi_imenik(ime_datoteke)
-    with open(ime_datoteke, 'w', encoding='utf-8') as csv_datoteka:
-        writer = csv.DictWriter(csv_datoteka, fieldnames=imena_polj)
-        writer.writeheader()
-        for slovar in slovarji:
-            writer.writerow(slovar)
+
+def write_cat_csv(ads):
+    '''Save "ads" to "cat_directory"/"csv_filename"'''
+    write_cat_ads_to_csv(ads, cat_directory, csv_filename)
