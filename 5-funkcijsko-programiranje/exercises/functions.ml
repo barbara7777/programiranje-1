@@ -4,7 +4,11 @@
  Hint: Write a function for reversing lists.
 [*----------------------------------------------------------------------------*)
 
-let rec reverse = ()
+let rec reverse list =
+  let rec rev acc = function
+  | [] -> acc
+  | x :: xs -> rev (x :: acc) xs
+  in rev [] list
 
 (*----------------------------------------------------------------------------*]
  The function [repeat x n] returns a list with [n] repetitions of [x]. For
@@ -16,7 +20,33 @@ let rec reverse = ()
  - : string list = []
 [*----------------------------------------------------------------------------*)
 
-let rec repeat = ()
+let rec repeat x n =
+  if n <= 0 then
+    []
+  else 
+    x :: repeat n (n - 1)
+
+    (*repeat 0 10
+  ;;
+- : int list = [0; 10; 9; 8; 7; 6; 5; 4; 3; 2] *)
+
+let rec repeat x n =
+  if n <= 0 then
+    []
+  else 
+    x :: repeat x (n - 1)  (*pri zelo veliki številki se bo sesul *)
+
+(*napišimo isto funkcijo z akumolatorjem *)
+let rec repeat x n =
+  let rec repeat' x n acc = 
+    if n <= 0 then
+      acc
+    else 
+      let new_acc = x :: acc in
+      repeat' x (n -1) new_acc
+  in
+  repeat' x n []
+
 
 (*----------------------------------------------------------------------------*]
  The function [range] accepts an integer and returns a list of all non-negative
@@ -28,7 +58,40 @@ let rec repeat = ()
  - : int list = [0; 1; 2; 3; 4; 5; 6; 7; 8; 9; 10]
 [*----------------------------------------------------------------------------*)
 
-let rec range = ()
+let rec range n = 
+  if n < 0 then
+    []
+  else
+    (range (n -1)) @ [n]
+(* afna združi SEZNAM na KONEC *)
+
+(* repno rekurzivna verzija *)
+let rec range n =
+  let rec range' n acc =
+    if n < 0 then
+      acc
+    else
+      range' (n -1) (n :: acc)
+  in
+  range' n []
+
+
+let rec test_bad n acc =
+  if n < 0 then
+    acc
+  else
+    test_bad (n-1) (acc @ [0])
+
+let rec test_good n acc =
+  if n < 0 then
+    acc
+  else
+    test_good (n-1) (0 :: acc)
+
+  (* poskusi se izogniti dodajanju na konec seznama ker je veliko počasneje
+  raje dodajaj na zacetek in na koncu seznam obrni. zato imaš na začetki za narediti funkcijo reverse.
+  ampak pazi, da imaš repno rekurzivno funk sicer je ne smeš uporabljati kot rep. rek *)
+
 
 (*----------------------------------------------------------------------------*]
  The function [map f list] accepts a list [list] of form [x0; x1; x2; ...] and
@@ -39,7 +102,9 @@ let rec range = ()
  - : int list = [2; 3; 4; 5; 6]
 [*----------------------------------------------------------------------------*)
 
-let rec map = ()
+let rec map f = function
+  | [] -> []
+  | x :: xs -> f x :: map f xs
 
 (*----------------------------------------------------------------------------*]
   The function [map_tlrec] is the tail recursive version of map.
@@ -49,7 +114,12 @@ let rec map = ()
  - : int list = [2; 3; 4; 5; 6]
 [*----------------------------------------------------------------------------*)
 
-let rec map_tlrec = ()
+let rec map_tlrec f list = 
+  let rec map_tlrec' f sez acc = 
+    match sez with
+    | [] -> acc
+    | x :: xs -> map_tlrec' f xs (acc @ [f x])
+  in map_tlrec' f list []
 
 (*----------------------------------------------------------------------------*]
  The function [mapi f list] accepts a two argument function and returns a list
@@ -60,7 +130,12 @@ let rec map_tlrec = ()
  - : int list = [0; 1; 2; 5; 6; 7]
 [*----------------------------------------------------------------------------*)
 
-let rec mapi = ()
+let rec mapi f list =
+  let rec mapi' f sez acc index =
+    match sez, index with
+    | [], _ -> acc
+    | x :: xs, index -> mapi' f xs (acc @ [f x index]) (index + 1)
+  in mapi' f list [] 0
 
 (*----------------------------------------------------------------------------*]
  The function [zip list1 list2] accepts two lists and returns a list of pairs
@@ -73,7 +148,12 @@ let rec mapi = ()
  Exception: Failure "Different lengths of input lists.".
 [*----------------------------------------------------------------------------*)
 
-let rec zip = ()
+let rec zip list1 list2 =
+  if List.length list1 = List.length list2 then
+    match list1, list2 with
+    | [], [] -> []
+    | x :: xs, y :: ys -> [(x, y)] @ zip xs ys
+  else failwith "Dolzini seznamov se ne ujemata."
 
 (*----------------------------------------------------------------------------*]
  The function [zip_enum_tlrec] accepts lists [x_0; x_1; ...] and [y_0; y_1; ...]
@@ -84,7 +164,23 @@ let rec zip = ()
  - : (int * string * int) list = [(0, "a", 7); (1, "b", 3); (2, "c", 4)]
 [*----------------------------------------------------------------------------*)
 
-let rec zip_enum_tlrec = ()
+(* druga notacija za apliciranje funkcij: 
+  f x 
+  je enkako kot
+  x |> f
+  lahko uporabiš tako:
+  NAMESTO reverse (f x y list)) NAPISES (f x y list) |> reverse |> clean....*)
+
+let rec zip_enum_tlrec list1 list2 =
+  let rec zet list1 list2 acc inx =
+    if List.length list1 = List.length list2 then
+      match list1, list2 with
+      | [], [] -> acc |> reverse
+      | x :: xs, y :: ys -> zet xs ys ((inx, x, y) :: acc) (inx + 1)
+    else failwith "Dolzini seznamov se ne ujemata."
+  in zet list1 list2 [] 0
+
+
 (*----------------------------------------------------------------------------*]
  The function [unzip] is the inverse of [zip]. It accepts a list of pairs
  [(x0, y0); (x1, y1); ...] and returns the pair ([x0; x1; ...], [y0; y1; ...]).
@@ -93,7 +189,12 @@ let rec zip_enum_tlrec = ()
  - : int list * string list = ([0; 1; 2], ["a"; "b"; "c"])
 [*----------------------------------------------------------------------------*)
 
-let rec unzip = ()
+let rec unzip list =
+  let rec unzip' list acc1 acc2 =
+    match list with
+    | [] -> (reverse acc1, reverse acc2)
+    | (x, y) :: xs -> unzip' xs (x :: acc1) (y :: acc2)
+  in unzip' list [] []
 
 (*----------------------------------------------------------------------------*]
  The function [unzip_tlrec] is the tail recursive version of [unzip].
