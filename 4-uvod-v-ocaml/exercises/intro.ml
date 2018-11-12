@@ -51,7 +51,7 @@ let rec get k list =
   (*ker v resnici matchamo samo seznam, k je neuporabljen *)
 let rec get k = function
   | [] -> failwith "List too short"
-  | x : xs when k <= 0 -> x
+  | x :: xs when k <= 0 -> x
   | x :: xs -> get (k-1) xs
   
 (*----------------------------------------------------------------------------*]
@@ -61,7 +61,9 @@ let rec get k = function
  - : int list = [1; 1; 2; 2; 3; 3]
 [*----------------------------------------------------------------------------*)
 
-let rec double = ()
+let rec double = function
+| [] -> []
+| x :: xs -> x :: x :: double xs
 
 (*----------------------------------------------------------------------------*]
  The function [divide k list] divides the list into a pair of lists. The first
@@ -75,13 +77,13 @@ let rec double = ()
  - : int list * int list = ([1; 2; 3; 4; 5], [])
 [*----------------------------------------------------------------------------*)
 
-let rec divide k list =
-  match list with
+(*let rec divide k list =
+  match k, list with
   | k, list when (k <= 0) -> ([], list)
   | k, [] -> ([], [])
-  | k, k :: xs -> 
+  | k, x :: xs -> 
     let (left_list, right_list) = divide (k-1) xs in
-    (x :: left_list, right_list)
+    (x :: left_list, right_list)dffffffffffffff*)
 
 
 (*----------------------------------------------------------------------------*]
@@ -92,7 +94,11 @@ let rec divide k list =
  - : int list = [0; 0; 0; 0; 0]
 [*----------------------------------------------------------------------------*)
 
-let rec delete = ()
+let rec delete k list =
+  match k, list with 
+  | _, [] -> failwith "List too short"
+  | 1, x :: xs -> xs
+  | k, x :: xs when (k >= 2) -> x :: delete (k-1) xs
 
 (*----------------------------------------------------------------------------*]
  The function [slice i k list] returns the sub-list of [list] from the [i]-th
@@ -102,7 +108,11 @@ let rec delete = ()
  - : int list = [1; 2; 3]
 [*----------------------------------------------------------------------------*)
 
-let rec slice = ()
+let rec slice i k list =
+  match i, k, list with
+  | _, _, [] -> failwith "List too short"
+  | 0, k, x :: xs when (k >= 1) -> [x] + slice 1 (k-1) xs
+  | i, k, x :: xs -> slice (i-1) (k-1) xs
 
 (*----------------------------------------------------------------------------*]
  The function [insert x k list] inserts (not replaces) [x] into the list at the

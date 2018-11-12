@@ -2,6 +2,7 @@ import requests
 import re
 import os
 import csv
+import sys
 
 ###############################################################################
 # Najprej definirajmo nekaj pomožnih orodij za pridobivanje podatkov s spleta.
@@ -10,14 +11,14 @@ import csv
 # definiratje URL glavne strani bolhe za oglase z mačkami
 cats_frontpage_url = 'http://www.bolha.com/zivali/male-zivali/macke/'
 # mapa, v katero bomo shranili podatke
-cat_directory = 'TODO'
+cat_directory = 'cats_data'
 # ime datoteke v katero bomo shranili glavno stran
-frontpage_filename = 'spletna_stran'
+frontpage_filename = 'frontpage.html'
 # ime CSV datoteke v katero bomo shranili podatke
-csv_filename = 'macke_z_bolhe'
+csv_filename = 'cats_data.cvs'
 
 
-def download_url_to_string(cats_frontpage_url):
+def download_url_to_string(url):
     '''This function takes a URL as argument and tries to download it
     using requests. Upon success, it returns the page contents as string.'''
     try:
@@ -28,17 +29,18 @@ def download_url_to_string(cats_frontpage_url):
     except requests.exceptions.ConnectionError:
         # koda, ki se izvede pri napaki
         # dovolj je če izpišemo opozorilo in prekinemo izvajanje funkcije
-        print('Stran ne obstaja.')
+        print('Could not acces page ' + url)
+        return ''
     # nadaljujemo s kodo če ni prišlo do napake
-    return 
+    return r.text
 
 
-def save_string_to_file(text, cat_directory, frontpage_filename):
+def save_string_to_file(text, directory, filename):
     '''Write "text" to the file "filename" located in directory "directory",
     creating "directory" if necessary. If "directory" is the empty string, use
     the current directory.'''
     os.makedirs(directory, exist_ok=True)
-    path = os.path.join(cat_directory, frontpage_filename)
+    path = os.path.join(directory, filename)
     with open(path, 'w', encoding='utf-8') as file_out:
         file_out.write(text)
     return None
@@ -46,11 +48,10 @@ def save_string_to_file(text, cat_directory, frontpage_filename):
 # Definirajte funkcijo, ki prenese glavno stran in jo shrani v datoteko.
 
 
-def save_frontpage(frontpage_filename):
+def save_frontpage():
     '''Save "cats_frontpage_url" to the file
     "cat_directory"/"frontpage_filename"'''
-
-    return TODO
+    save_string_to_file(download_url_to_string(cats_frontpage_url), cat_directory, frontpage_filename)
 
 ###############################################################################
 # Po pridobitvi podatkov jih želimo obdelati.
@@ -59,7 +60,7 @@ def save_frontpage(frontpage_filename):
 
 def read_file_to_string(directory, filename):
     '''Return the contents of the file "directory"/"filename" as a string.'''
-    with open filename as datoteka:
+    with open(filename, encoding='utf-8') as datoteka:
         return datoteka.read()
 
 # Definirajte funkcijo, ki sprejme niz, ki predstavlja vsebino spletne strani,
@@ -68,47 +69,50 @@ def read_file_to_string(directory, filename):
 # oglasa. Funkcija naj vrne seznam nizov.
 
 
-def page_to_ads(url):
+def page_to_ads(datoteka):
     '''Split "page" to a list of advertisement blocks.'''
+    with open(datoteka, encoding='utf-8') as page:
+        vsebina = page.read()
 
-    vzorec = (r'<div class="coloumn image">'
-        '\s'
-        r'<table><tr><td><a title="\w*?" '
-        '[\w\s]*?'
-        r'title="Shrani oglas" class="button btnYellow save _ad">Shrani oglas</a>'
-
-    return re.findall(vzorec, url)
+        vzorec = re.compile(
+            r'<div class="coloumn image">.*?'
+            r'<table><tr><td><a title="\w*?".*?'
+            r'title="Shrani oglas" class="button btnYellow save _ad">Shrani oglas</a>',
+            re.DOTALL
+        )
+        return re.findall(vzorec, vsebina)
 
 # Definirajte funkcijo, ki sprejme niz, ki predstavlja oglas, in izlušči
 # podatke o imenu, ceni in opisu v oglasu.
 
 
-def get_dict_from_ad_block(TODO):
+def get_dict_from_ad_block(ad_block):
     '''Build a dictionary containing the name, description and price
     of an ad block.'''
-    slovar = {}
-    vzorec = r'<table><tr><td><a title="(?P<ime>\.+)"'
-        '\.+?'
-        r'<div class="coloumn content">' '\n' r'<h3><a\.*?</a></h3>' '\s*' '(?P<opis>\w*?)'
-        r'<div class="additionalInfo">'
-        '[\s\.]+?'
-        r'<div class="price">(?P<cena>\w*?)</div>'
+    vzorec = re.compile(
+        r'<table><tr><td><a title="(?P<ime>.+)".*?'
+        r'<div class="coloumn content">' '\n' r'<h3><a.*?</a></h3>.+(?P<opis>\w*?).*?'
+        r'<div class="price">(?P<cena>\w*?)</div>',
+        re.DOTALL
+    )
+    for ujemanje in re.finditer(vzorec, ad_block):
+        slovar_oglasov = ujemanje.groupdict()
 
-    for ujemanje in re.finditer(vzorec, vsebina):
-        slovar['ime'] = ujemanje.group('ime')
-        slovar['cena'] = ujemanje.group('cena')
-        slovar['opis'] = ujemanje.group('opis')
+        slovar_oglasov['opis'] = slovar_oglasov['opis'].strip()
 
-    return slovar
+    return slovar_oglasov
 
 # Definirajte funkcijo, ki sprejme ime in lokacijo datoteke, ki vsebuje
 # besedilo spletne strani, in vrne seznam slovarjev, ki vsebujejo podatke o
 # vseh oglasih strani.
 
 
-def ads_from_file(TODO):
+def ads_from_file(ime_dateteke):
     '''Parse the ads in filename/directory into a dictionary list.'''
-    return TODO
+    seznam = []
+    for ad in page_to_ads(ime_dateteke):
+        seznam.append(get_dict_from_ad_block(ad))
+    return seznam
 
 ###############################################################################
 # Obdelane podatke želimo sedaj shraniti.
@@ -133,5 +137,11 @@ def write_csv(fieldnames, rows, directory, filename):
 # stolpce [fieldnames] pridobite iz slovarjev.
 
 
-def write_cat_ads_to_csv(TODO):
-    return TODO
+def write_cat_ads_to_csv(slovarji, imena_polj, ime_datoteke):
+    '''Iz seznama slovarjev ustvari CSV datoteko z glavo.'''
+    pripravi_imenik(ime_datoteke)
+    with open(ime_datoteke, 'w', encoding='utf-8') as csv_datoteka:
+        writer = csv.DictWriter(csv_datoteka, fieldnames=imena_polj)
+        writer.writeheader()
+        for slovar in slovarji:
+            writer.writerow(slovar)
