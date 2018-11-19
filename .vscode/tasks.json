@@ -1,0 +1,30 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "ocaml",
+            "type": "shell",
+            "command": "C:\\OCaml32\\usr\\local\\bin\\ocaml-env.exe exec -- C:\\OCaml32\\home\\Barbara\\.opam\\4.06.1+mingw32c\\bin\\ocaml.exe -init ",
+            "args": [
+              {
+                "value": "${file}",
+                "quoting": "escape"
+              }
+            ]
+        },
+        {
+        "label": "run file in python",
+        "type": "shell",
+        "command": "python",
+        "args": [
+            "-i",
+        {
+            "value": "${file}",
+            "quoting": "escape"
+        }
+        ]
+    }
+    ]
+}
