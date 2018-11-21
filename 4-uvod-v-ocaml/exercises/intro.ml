@@ -30,6 +30,11 @@ let rec penultimate_element = function   (*polepšana funkcija *)
   | x :: _ :: [] -> x
   | _ :: y :: ys -> penultimate_element (y :: ys)
 
+let rec penultimate_element = function
+  | [] | [_] -> failwith "list too short"
+  | x :: [_] -> x
+  | _ :: xs -> penultimate_element xs
+
 
 (*----------------------------------------------------------------------------*]
  The function [get k list] returns the [k]-th element in the list [list].
@@ -42,6 +47,13 @@ let rec penultimate_element = function   (*polepšana funkcija *)
 [*----------------------------------------------------------------------------*)
 
 let rec get k list =
+  match k, list with
+  | _, [] -> failwith "list too short"
+  | k, list when (List.length list < k) -> []
+  | k, x :: xs when k <= 0 -> x
+  | k, x :: xs -> get (k-1) xs
+
+let rec get k list =
   match k, list with    	(*če naštevam vmes z vejicami, je to kot par *)
   | _, [] -> failwith "List too short"
   | k, x :: xs when k <= 0 -> x
@@ -51,8 +63,7 @@ let rec get k list =
   (*ker v resnici matchamo samo seznam, k je neuporabljen *)
 let rec get k = function
   | [] -> failwith "List too short"
-  | x :: xs when k <= 0 -> x
-  | x :: xs -> get (k-1) xs
+  | x :: xs -> if k <= 0 then x else get (k-1) xs
   
 (*----------------------------------------------------------------------------*]
  The function [double list] doubles the occurences of elements in the list.
@@ -77,15 +88,14 @@ let rec double = function
  - : int list * int list = ([1; 2; 3; 4; 5], [])
 [*----------------------------------------------------------------------------*)
 
-(*let rec divide k list =
+let rec divide k list =
   match k, list with
+  | _, [] -> ([], [])
   | k, list when (k <= 0) -> ([], list)
-  | k, [] -> ([], [])
-  | k, x :: xs -> 
-    let (left_list, right_list) = divide (k-1) xs in
-    (x :: left_list, right_list)dffffffffffffff*)
-
-
+  | k, x :: xs ->
+    let (list1, list2) = divide (k - 1) xs 
+    in (x :: list1, list2)
+      
 (*----------------------------------------------------------------------------*]
  The function [delete k list] removes the [k]-th element of the list.
  If the list is too short it raises an error.
@@ -95,10 +105,11 @@ let rec double = function
 [*----------------------------------------------------------------------------*)
 
 let rec delete k list =
-  match k, list with 
-  | _, [] -> failwith "List too short"
-  | 1, x :: xs -> xs
-  | k, x :: xs when (k >= 2) -> x :: delete (k-1) xs
+  match k, list with
+  | _, [] -> failwith "list too short"
+  | 0, x :: xs -> xs
+  | k, x :: xs -> x :: delete (k-1) xs
+
 
 (*----------------------------------------------------------------------------*]
  The function [slice i k list] returns the sub-list of [list] from the [i]-th
@@ -108,11 +119,27 @@ let rec delete k list =
  - : int list = [1; 2; 3]
 [*----------------------------------------------------------------------------*)
 
+let slice i k list =
+  let (_, slice1) = divide i list in
+  let (slice2, _) = divide (k - i) slice1 in
+  slice2
+
+(*
+let rec reverse list =
+  let rec reverse' acc = function
+    | [] -> acc
+    | x :: xs -> reverse' (x :: acc) xs
+  in reverse' [] list
+
 let rec slice i k list =
-  match i, k, list with
-  | _, _, [] -> failwith "List too short"
-  | 0, k, x :: xs when (k >= 1) -> [x] + slice 1 (k-1) xs
-  | i, k, x :: xs -> slice (i-1) (k-1) xs
+  let rec slice' i k acc list=
+    match i, k, list with
+    | _, _, [] -> failwith "list too short"
+    | i, k, list when i >= k -> acc
+    | 0, k, x :: xs -> slice' 0 (k-1) (x :: acc) xs
+    | i, k, x :: xs -> slice' (i-1) (k-1) acc xs
+  in slice' i k [] (reverse list)
+*)
 
 (*----------------------------------------------------------------------------*]
  The function [insert x k list] inserts (not replaces) [x] into the list at the
@@ -126,7 +153,10 @@ let rec slice i k list =
  - : int list = [1; 0; 0; 0; 0; 0]
 [*----------------------------------------------------------------------------*)
 
-let rec insert = ()
+let rec insert x k list =
+  let (prvi_del, drugi_del) = divide k list in
+  prvi_del @ [x] @ drugi_del
+
 
 (*----------------------------------------------------------------------------*]
  The function [rotate n list] rotates the list to the left by [n] places.
@@ -136,7 +166,10 @@ let rec insert = ()
  - : int list = [3; 4; 5; 1; 2]
 [*----------------------------------------------------------------------------*)
 
-let rec rotate = ()
+let rec rotate n list =
+  match n, list with
+  | 0, _ | _, [] -> list
+  | n, x :: xs -> rotate (n-1) (xs @ [x])
 
 (*----------------------------------------------------------------------------*]
  The function [remove x list] removes all occurrences of [x] in the list.
@@ -145,7 +178,11 @@ let rec rotate = ()
  - : int list = [2; 3; 2; 3]
 [*----------------------------------------------------------------------------*)
 
-let rec remove = ()
+let rec remove x list =
+  match x, list with
+  | _, [] -> []
+  | x, y :: ys -> if x = y then remove x ys else ([y] @ remove x ys)
+
 
 (*----------------------------------------------------------------------------*]
  The function [is_palindrome] checks if a list is a palindrome.
@@ -157,7 +194,13 @@ let rec remove = ()
  - : bool = false
 [*----------------------------------------------------------------------------*)
 
-let rec is_palindrome = ()
+let rec is_palindrome list =
+  let rec invert list acc =
+    match list with
+    | [] -> acc
+    | x :: xs -> invert xs (x :: acc)
+    in invert list [] = list
+  
 
 (*----------------------------------------------------------------------------*]
  The function [max_on_components] returns a list with the maximum element
@@ -168,7 +211,11 @@ let rec is_palindrome = ()
  - : int list = [5; 4; 3; 3; 4]
 [*----------------------------------------------------------------------------*)
 
-let rec max_on_components = ()
+let rec max_on_components list1 list2 =
+  match list1, list2 with
+  | _, [] | [], _ -> []
+  | x :: xs, y :: ys -> if x > y then (x :: max_on_components xs ys)
+  else (y :: max_on_components xs ys)
 
 (*----------------------------------------------------------------------------*]
  The function [second_largest] returns the second largest value in the list.
@@ -180,4 +227,21 @@ let rec max_on_components = ()
  - : int = 10
 [*----------------------------------------------------------------------------*)
 
-let rec second_largest = ()
+(*)
+let rec largest list = 
+  let rec largest' biggest lsit =
+  match list with 
+  | x :: xs -> if x > biggest then largest' x xs else largest' biggest xs
+  in largest' 0 list
+
+let rec second_largest list =
+  largest (remove (largest list) list)
+*)
+
+let second_largest list =
+  let rec largest = function
+    | [] -> failwith "List is too short."
+	  | x :: [] -> x
+	  | x :: xs -> max x (largest xs)
+  in
+  largest (delete (largest list) list)
