@@ -203,7 +203,13 @@ let rec unzip list =
  - : int list * string list = ([0; 1; 2], ["a"; "b"; "c"])
 [*----------------------------------------------------------------------------*)
 
-let rec unzip_tlrec = ()
+let rec unzip_tlrec list =
+  let rec unzip ac1 ac2 = function
+  | [] -> (ac1, ac2)
+  | (x, y) :: xs -> unzip (ac1 @ [x]) (ac2 @ [y]) xs
+  in unzip [] [] list
+
+
 (*----------------------------------------------------------------------------*]
  The function [fold_left_no_acc f list] accepts a list [x0; x1; ...; xn] and a
  two argument function [f] and returns the value of the computation
@@ -214,7 +220,10 @@ let rec unzip_tlrec = ()
  - : string = "FICUS"
 [*----------------------------------------------------------------------------*)
 
-let rec fold_left_no_acc = ()
+let rec fold_left_no_acc f = function (*a * 'a -> neki *)
+  | [] | [_] -> failwith " tooo short"
+  | [x; y] -> [f x y]
+  | x :: y :: rest -> fold_left_no_acc f ((f x y) :: rest)
 
 (*----------------------------------------------------------------------------*]
  The function [apply_sequence f x n] returns the list of repeated applications
@@ -228,7 +237,11 @@ let rec fold_left_no_acc = ()
  - : int list = []
 [*----------------------------------------------------------------------------*)
 
-let rec apply_sequence = ()
+let rec apply_sequence f x n = 
+  let rec apply acc f x n =
+    if n < 0 then reverse acc else
+    apply (x :: acc) f (f x) (n-1)
+    in apply [x] f x n
 
 (*----------------------------------------------------------------------------*]
  The function [filter f list] returns a list of elements of [list] for which
@@ -238,7 +251,16 @@ let rec apply_sequence = ()
  - : int list = [4; 5]
 [*----------------------------------------------------------------------------*)
 
-let rec filter = ()
+let rec tail_recursive_filter f list =
+  let rec fl f acc = function
+    | [] -> reverse acc
+    | x :: xs -> if f x then fl f (x :: acc) xs else
+      fl f acc xs
+    in fl f [] list
+
+let rec filter f = function
+| [] -> []
+| x :: xs -> if f x then x :: (filter f xs) else filter f xs
 
 (*----------------------------------------------------------------------------*]
  The function [exists] accepts a list and a function and returns [true] if
@@ -252,7 +274,9 @@ let rec filter = ()
  - : bool = false
 [*----------------------------------------------------------------------------*)
 
-let rec exists = ()
+let rec exists f = function
+  | [] -> false
+  | x :: xs -> if f x then true else exists f xs
 
 (*----------------------------------------------------------------------------*]
  The function [first f default list] returns the first element of the list for
@@ -266,4 +290,6 @@ let rec exists = ()
  - : int = 0
 [*----------------------------------------------------------------------------*)
 
-let rec first = ()
+let rec first f default = function
+  | [] -> default
+  | x :: xs -> if f x then x else first f default xs
