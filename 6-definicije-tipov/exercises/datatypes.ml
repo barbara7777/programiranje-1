@@ -56,7 +56,7 @@ let has_zero tree =
  - : euro = Euro 0.4305
 [*----------------------------------------------------------------------------*)
 
-type eurro = Euro of float
+type euro = Euro of float
 type dollar = Dollar of float
 
 let dollar_to_euro_bad euro = 0.2 *. euro
@@ -67,8 +67,6 @@ let dollar_to_euro_good dollar =
 
 (*  drugi moznosti
 let Dollar v = dolar in ...
-
-let dollar_to_euro (Dollar v) = ....
 *)
 
 (*----------------------------------------------------------------------------*]
@@ -218,7 +216,15 @@ let rec intbool_separate ib_list =
  a researcher. Define the type [specialisation] that represents those choices.
 [*----------------------------------------------------------------------------*)
 
+type magic = 
+  | Fire
+  | Frost
+  | Arcane
 
+type specialisation = 
+  | Historian
+  | Teacher
+  | Researcher
 
 (*----------------------------------------------------------------------------*]
  Every wizard starts out as a newbie. Afterwards they become a student and in
@@ -235,7 +241,12 @@ let rec intbool_separate ib_list =
  - : wizard = {name = "Matija"; status = Employed (Fire, Teacher)}
 [*----------------------------------------------------------------------------*)
 
+type status =
+  | Newbie
+  | Student of magic * int
+  | Employee of magic * specialisation 
 
+type wizard = {name : string; status : status}
 
 (*----------------------------------------------------------------------------*]
  We want to count how many users of a certain school of magic are currently in
@@ -249,7 +260,12 @@ let rec intbool_separate ib_list =
  - : magic_counter = {fire = 1; frost = 1; arcane = 2}
 [*----------------------------------------------------------------------------*)
 
+type magic_counter = {fire : int; frost : int; arcane : int}
 
+let update counter = function
+  | Fire -> {counter with fire = counter.fire + 1}
+  | Frost -> {counter with frost = counter.frost + 1}
+  | Arcane -> {counter with arcane = counter.arcane + 1}
 
 (*----------------------------------------------------------------------------*]
  The function [count_magic] accepts a list of wizards and counts the users of
@@ -259,7 +275,22 @@ let rec intbool_separate ib_list =
  - : magic_counter = {fire = 3; frost = 0; arcane = 0}
 [*----------------------------------------------------------------------------*)
 
-let rec count_magic = ()
+let rec count_magic = 
+  let rec count  counter = function
+  | [] -> counter
+  | x :: xs -> count (update counter x) xs
+  in count {fire = 0; frost = 0; arcane = 0} 
+
+let count_magic wizard_list =
+  let rec count counter = function
+    | [] -> counter
+    | {name; status} :: wizards -> (
+        match status with
+        | Newbie -> count counter wizards
+        | Student (magic, _) -> count (update counter magic) wizards
+        | Employee (magic, _) -> count (update counter magic) wizards)
+  in count {fire = 0; frost = 0; arcane = 0} wizard_list
+
 
 (*----------------------------------------------------------------------------*]
  We wish to find a possible candidate for a job offer. A student can become a
@@ -275,4 +306,17 @@ let rec count_magic = ()
  - : string option = Some "Jaina"
 [*----------------------------------------------------------------------------*)
 
-let rec find_candidate = ()
+let rec find_candidate magic specialisation wizard_list =
+  match wizard_list with
+  | [] -> None
+  | {name; status} :: wizards -> 
+    (match status with
+    | Newbie -> find_candidate magic specialisation wizards
+    | Employee (_, _) ->  find_candidate magic specialisation wizards
+    | Student (learn_magic, years) -> if  (learn_magic = magic) then
+        (match specialisation with
+        | Historian -> if (years >= 3) then Some name else find_candidate magic specialisation wizards
+        | Teacher -> if years >= 4 then Some name else find_candidate magic specialisation wizards
+        | Researcher -> if years >= 5 then Some name else find_candidate magic specialisation wizards)
+        else find_candidate magic specialisation wizards)
+  
