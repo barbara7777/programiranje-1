@@ -241,7 +241,7 @@ let rec apply_sequence f x n =
   let rec apply acc f x n =
     if n < 0 then reverse acc else
     apply (x :: acc) f (f x) (n-1)
-    in apply [x] f x n
+    in apply [] f x n
 
 (*----------------------------------------------------------------------------*]
  The function [filter f list] returns a list of elements of [list] for which
