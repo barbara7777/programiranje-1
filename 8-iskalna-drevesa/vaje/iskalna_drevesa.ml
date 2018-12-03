@@ -6,6 +6,20 @@
  poddrevesi. Na tej točki ne predpostavljamo ničesar drugega o obliki dreves.
 [*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*)
 
+type 'a tree =
+  | Empty
+  | Node of 'a tree * 'a * 'a tree
+
+(*
+type 'a tree =
+  | Empty
+  | Leaf 'a
+  | Node of 'a tree * 'a * 'a tree
+
+Leaf x = Node (Empty, x, Empty)
+*)
+
+let leaf x = Node (Empty, x, Empty)
 
 (*----------------------------------------------------------------------------*]
  Definirajmo si testni primer za preizkušanje funkcij v nadaljevanju. Testni
@@ -18,6 +32,10 @@
       0   6   11
 [*----------------------------------------------------------------------------*)
 
+let test_tree =
+  let left_tree = Node(leaf 0, 2, Empty) in
+  let right_tree = Node(leaf 6, 7, leaf 11) in 
+  Node(left_tree, 5, right_tree)
 
 (*----------------------------------------------------------------------------*]
  Funkcija [mirror] vrne prezrcaljeno drevo. Na primeru [test_tree] torej vrne
@@ -33,6 +51,10 @@
  Node (Empty, 2, Node (Empty, 0, Empty)))
 [*----------------------------------------------------------------------------*)
 
+let rec mirror tree =
+  match tree with
+  | Empty -> Empty
+  | Node(left, x, right) -> Node(mirror right, x, mirror left)
 
 (*----------------------------------------------------------------------------*]
  Funkcija [height] vrne višino oz. globino drevesa, funkcija [size] pa število
@@ -43,6 +65,43 @@
  # size test_tree;;
  - : int = 6
 [*----------------------------------------------------------------------------*)
+
+let rec size = function
+  | Empty -> 0
+  | Node (left, x, right) -> 1 + size left + size right
+
+
+
+(*
+PRIDE V POSTEV ZA IZPIT
+
+
+kako bi take funkcije naredili repno rekurzivno
+*)
+
+
+let tl_rec_size tree =
+  let rec size' acc queue =   (* v queue imamo se tista drevesa, ki jih se moramo obdelati;
+  poglejmo kateri je naslednji element v vrsti za obravnavo. *)
+  match queue with
+  | []-> acc
+  | t :: ts -> (
+    (*  obravnavamo drevo *)
+    match t with
+    | Empty -> size' acc ts  (* Prazno drevo smo odstranili iz vrste *)
+    | Node(left, x, right) ->
+    let new_acc = acc + 1 in (* Obravnavamo vozlisce *)
+    let new_queue = left :: right :: ts in (* Dodamo poddrevesa v vrsto *)
+    size' new_acc new_queue
+  )
+  (* Zazenemo pomozno funkcijo *)
+  in size' 0 [tree]
+
+
+let rec height = function
+  | Empty -> 0
+  | Node (left, _, right) -> if height left < height right then 1 + height right
+    else 1 + height left
 
 
 (*----------------------------------------------------------------------------*]
@@ -55,6 +114,10 @@
  Node (Node (Empty, true, Empty), true, Node (Empty, true, Empty)))
 [*----------------------------------------------------------------------------*)
 
+let rec map_tree f tree = 
+  match tree with
+  | Empty -> Empty
+  | Node (left, x, right) -> Node (map_tree f left, f x, map_tree f right)
 
 (*----------------------------------------------------------------------------*]
  Funkcija [list_of_tree] pretvori drevo v seznam. Vrstni red podatkov v seznamu
@@ -64,6 +127,9 @@
  - : int list = [0; 2; 5; 6; 7; 11]
 [*----------------------------------------------------------------------------*)
 
+let rec list_of_tree = function
+  | Empty -> []
+  | Node (left, x, right) -> list_of_tree left @ [x] @ list_of_tree right
 
 (*----------------------------------------------------------------------------*]
  Funkcija [is_bst] preveri ali je drevo binarno iskalno drevo (Binary Search 
@@ -76,6 +142,14 @@
  - : bool = false
 [*----------------------------------------------------------------------------*)
 
+let rec is_bst = function
+  | Empty -> true
+  | tree -> let sez = list_of_tree tree in 
+    let rec is_sorted = function
+      | [] | [_] -> true
+      | x :: y :: rest -> if x > y then false 
+      else is_sorted (y :: rest)
+      in is_sorted sez 
 
 (*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*]
  V nadaljevanju predpostavljamo, da imajo dvojiška drevesa strukturo BST.
@@ -91,6 +165,18 @@
  - : bool = false
 [*----------------------------------------------------------------------------*)
 
+let rec insert el = function
+  | Empty -> Node(Empty, el, Empty)
+  | Node(Empty, x, Empty) -> if el < x then Node(leaf el, x, Empty)
+  else Node(Empty, x, leaf el)
+  | Node(left, x, right) -> if el < x then
+    insert el left else insert el right
+
+
+let rec member el = function
+  | Empty -> false
+  | tree -> List.exists (fun x -> x = el) (list_of_tree tree)
+
 
 (*----------------------------------------------------------------------------*]
  Funkcija [member2] ne privzame, da je drevo bst.
@@ -99,6 +185,10 @@
  funkcije [member2] na drevesu z n vozlišči, ki ima globino log(n). 
 [*----------------------------------------------------------------------------*)
 
+let rec member2 el = function
+  | Empty -> false
+  | Node(left, x, right) -> if el = x then true else
+  member2 el left || member2 el right
 
 (*----------------------------------------------------------------------------*]
  Funkcija [succ] vrne naslednjika korena danega drevesa, če obstaja. Za drevo
@@ -113,6 +203,17 @@
  - : int option = None
 [*----------------------------------------------------------------------------*)
 
+let succ = function
+  | Empty -> None
+  | Node(left, x, right) -> if (member2 (x + 1) left || member2 (x + 1) right) 
+  then Some (x + 1)
+  else None
+
+let pred = function
+  | Empty -> None
+  | Node(left, x, right) -> if (member2 (x - 1) left || member2 (x - 1) right) 
+  then Some (x - 1)
+  else None
 
 (*----------------------------------------------------------------------------*]
  Na predavanjih ste omenili dva načina brisanja elementov iz drevesa. Prvi 
@@ -127,6 +228,10 @@
  Node (Node (Empty, 6, Empty), 11, Empty))
 [*----------------------------------------------------------------------------*)
 
+let rec delete el = function
+  | Empty -> Empty
+  | Node(left, x, right) -> if el = x then Node(left, 0, right) else 
+    Node(delete el left, x, delete el right)
 
 (*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*]
  SLOVARJI
