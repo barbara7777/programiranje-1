@@ -233,6 +233,24 @@ let rec delete el = function
   | Node(left, x, right) -> if el = x then Node(left, 0, right) else 
     Node(delete el left, x, delete el right)
 
+(* Asistentova resite *)
+let rec delete x tree =
+  match tree with
+  | Empty -> (* Empty case *) Empty
+  | Node(Empty, y, Empty) when x = y -> (* Leaf case *) Empty
+  | Node(Empty, y, rt) when x = y -> (* One sided *) rt 
+  | Node(lt, y, Empty) when x = y -> (* One sided *) lt 
+  | Node(lt, y, rt) when x <> y -> (* Recourse deeper *)
+    if x > y then
+      Node(lt, y, delete x rt)
+    else
+      Node(delete x lt, y, rt)
+  | Node(lt, y, rt) -> (* SUPER FUN CASE *) 
+    match succ tree with
+    | None -> failwith "HOW IS THIS POSSIBLE?" (* This can not happen *)
+    | Some z -> Node(lt, z, delete z rt)
+
+
 (*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*]
  SLOVARJI
 
@@ -244,6 +262,9 @@ let rec delete el = function
  vrednosti, ga parametriziramo kot [('key, 'value) dict].
 [*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*)
 
+type ('key, 'value) dict =
+  | DEmpty
+  | DNode of ('key, 'value) dict * 'key * 'value * ('key, 'value) dict
 
 (*----------------------------------------------------------------------------*]
  Napišite testni primer [test_dict]:
@@ -254,6 +275,7 @@ let rec delete el = function
      "c":-2
 [*----------------------------------------------------------------------------*)
 
+let test_dict = DNode(DNode(DEmpty, "a" , 0, DEmpty), "b" , 1, DNode(DNode(DEmpty, "c" , -2, DEmpty), "d" , 2, DEmpty))
 
 (*----------------------------------------------------------------------------*]
  Funkcija [dict_get key dict] v slovarju poišče vrednost z ključem [key]. Ker
@@ -265,7 +287,13 @@ let rec delete el = function
  - : int option = Some (-2)
 [*----------------------------------------------------------------------------*)
 
-      
+let rec dict_get key = function
+  | DEmpty -> None
+  | DNode (left, dict_key, dict_value, right) -> 
+    if key = dict_key then Some dict_value
+    else if key < dict_key then dict_get key left else dict_get key right
+
+
 (*----------------------------------------------------------------------------*]
  Funkcija [print_dict] sprejme slovar s ključi tipa [string] in vrednostmi tipa
  [int] in v pravilnem vrstnem redu izpiše vrstice "ključ : vrednost" za vsa
@@ -281,6 +309,17 @@ let rec delete el = function
  d : 2
  - : unit = ()
 [*----------------------------------------------------------------------------*)
+
+let rec print_dict dict =
+  let print key value = print_string (key ^ " : "); print_int value in 
+  match dict with
+  | DEmpty -> ()
+  | DNode(DEmpty, dict_key, dict_value, DEmpty) -> 
+    print dict_key dict_value
+  | DNode (left, dict_key, dict_value, right) -> 
+    (print_dict left;
+    print dict_key dict_value;
+    print_dict right)  
 
 
 (*----------------------------------------------------------------------------*]
@@ -302,3 +341,9 @@ let rec delete el = function
  - : unit = ()
 [*----------------------------------------------------------------------------*)
 
+let rec dict_insert key value = function
+  | DEmpty -> DNode(DEmpty, key, value, DEmpty)
+  | DNode(left, d_key, d_value, right) when key = d_key -> DNode(left, d_key, value, right) 
+  | DNode (left, d_key, d_value, right) -> 
+    if key > d_key then DNode (left, d_key, d_value, dict_insert key value right)
+    else DNode (dict_insert key value left, d_key, d_value, right)
