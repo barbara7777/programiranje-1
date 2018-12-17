@@ -9,6 +9,14 @@
  val l : int list = [0; 1; 0; 4; 0; 9; 1; 2; 5; 4]
 [*----------------------------------------------------------------------------*)
 
+let randlist len max =
+  let rec rand sez max = function
+  | 0 -> sez
+  | k -> let n = Random.int (max) in 
+  rand (n :: sez) max (k - 1) 
+in rand [] max len
+
+
 
 (*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*]
  Sedaj lahko s pomočjo [randlist] primerjamo našo urejevalno funkcijo (imenovana
@@ -17,6 +25,12 @@
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  let test = (randlist 100 100) in (our_sort test = List.sort compare test);;
 [*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*)
+
+let test_sort_fun our_sort = 
+  let test = (randlist 100 100) in
+  (our_sort test = List.sort compare test)
+(* s for zanko lahko naredis da 1000 primerja rezultat tvoje funkcije in vgrajene in če
+se vmes pojavi odstopanje, funkcija vrne false, sicer true. *)
 
 
 (*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*]
@@ -35,13 +49,22 @@
  - : int list = [7]
 [*----------------------------------------------------------------------------*)
 
+let rec insert y = function
+  | [] -> [y]
+  | x :: xs -> 
+  if y < x then y :: x :: xs else 
+  x :: insert y xs
 
 (*----------------------------------------------------------------------------*]
  Prazen seznam je že urejen. Funkcija [insert_sort] uredi seznam tako da
  zaporedoma vstavlja vse elemente seznama v prazen seznam.
 [*----------------------------------------------------------------------------*)
 
-
+let insert_sort list =
+  let rec insert' new_list = function
+  | [] -> new_list
+  | x :: xs -> insert' (insert x new_list) xs
+  in insert' [] list
 
 (*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*]
  Urejanje z Izbiranjem
@@ -53,6 +76,20 @@
  pojavitvijo elementa [z]. V primeru praznega seznama vrne [None]. 
 [*----------------------------------------------------------------------------*)
 
+let min_and_rest = function
+  | [] -> None
+  | x :: xs as list-> 
+  let rec find_min current = function
+    | [] -> current
+    | t :: ts -> if t < current then find_min t ts
+      else find_min current ts
+  in 
+  let rec delete_min m = function
+    | [] -> []
+    | s :: ss -> if s = m then ss
+    else s :: delete_min m ss
+  in 
+  Some (find_min x list, delete_min (find_min x xs) list)
 
 (*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*]
  Pri urejanju z izbiranjem na vsakem koraku ločimo dva podseznama, kjer je prvi
@@ -72,7 +109,12 @@
  Namig: Uporabi [min_and_rest] iz prejšnje naloge.
 [*----------------------------------------------------------------------------*)
 
-
+let selection_sort list =
+  let rec sort sorted list = 
+    match min_and_rest list with
+    | None -> List.rev sorted
+    | Some(min, rest) -> sort (min :: sorted) rest
+  in sort [] list 
 
 (*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*]
  Urejanje z Izbiranjem na Tabelah
@@ -100,6 +142,12 @@
  # test;;
  - : int array = [|0; 4; 2; 3; 1|]
 [*----------------------------------------------------------------------------*)
+
+let swap arr i j = 
+  let n = arr.(i) in
+  arr.(i) <- arr.(j);
+  arr.(j) <- n
+
 
 
 (*----------------------------------------------------------------------------*]
