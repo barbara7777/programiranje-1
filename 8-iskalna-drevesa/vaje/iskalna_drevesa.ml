@@ -311,11 +311,9 @@ let rec dict_get key = function
 [*----------------------------------------------------------------------------*)
 
 let rec print_dict dict =
-  let print key value = print_string (key ^ " : "); print_int value in 
+  let print key value = print_string (key ^ " : " ^ (string_of_int value) ^ "\n") in 
   match dict with
   | DEmpty -> ()
-  | DNode(DEmpty, dict_key, dict_value, DEmpty) -> 
-    print dict_key dict_value
   | DNode (left, dict_key, dict_value, right) -> 
     (print_dict left;
     print dict_key dict_value;
