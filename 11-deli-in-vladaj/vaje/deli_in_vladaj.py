@@ -26,8 +26,35 @@
 #     >>> a
 #     [10, 2, 0, 4, 11, 15, 17, 5, 18]
 ##############################################################################
+def zamenjaj(seznam, ind1, ind2):
+    a = seznam[ind1]
+    seznam[ind1] = seznam[ind2]
+    seznam[ind2] = a
+    return seznam
 
 
+def pivot(a, start, end):
+    sez = a[start:end + 1]
+    piv = sez[0]
+    for spodnji in range(0, len(sez) - 1):
+        for zgornji in  range(0, len(sez) - 1):
+            if sez[spodnji] > piv:
+                print('nasel sem vecjega' + str(sez[spodnji]))
+                if sez[zgornji] < piv:
+                    print('nasel sem manjsega' + str(sez[zgornji]))
+                    zamenjaj(sez, spodnji, zgornji)
+    return a[:start] + sez + a[end + 1:]
+
+def pivot(a, start, end):
+    sez = a[start:end + 1]
+    piv = sez[0]
+    for spodnji in range(0, len(sez) - 1):
+        if sez[spodnji] > piv:
+            for zgornji in range(0, len(sez) - 1)
+            if sez[zgornji] < piv:
+                zamenjaj(sez, spodnji, zgornji)
+                print(sez)
+    return a[:start] + sez + a[end + 1:]
 
 ##############################################################################
 # Tabelo a želimo urediti z algoritmom hitrega urejanja (quicksort).
