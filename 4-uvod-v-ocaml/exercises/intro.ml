@@ -16,6 +16,10 @@ let rec ultimate_element list =    (* finkcija samo za čisto zadnji element *)
    | y :: [] -> y
    | y :: ys -> ultimate_element (ys)
 
+(* uredi po velikosti in združi dva seznama *)
+
+List.merge (compare) (List.sort (compare) [5;6;3;9;40]) (List.sort compare [34;65;23;76;346;4;0]);;
+
 
 let rec penultimate_element list = 
   match list with 
